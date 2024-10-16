@@ -4,18 +4,35 @@
 
 #include "CoreMinimal.h"
 #include "UI/WidgetController/AuraWidgetController.h"
+#include "GameplayTagContainer.h"
 #include "AttributeMenuWidgetController.generated.h"
+
+class UAttributeInfo;
+struct FAuraAttributeInfo;
+struct FGameplayTag;
+struct FGameplayAttribute;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeInfoSignature, const FAuraAttributeInfo&, Info);
 
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable) // now we can make a blueprint with this!
 class AURA_API UAttributeMenuWidgetController : public UAuraWidgetController
 {
 	GENERATED_BODY()
 	
 public:
-	virtual void BindCallbacksToDependencies();
 	virtual void BroadcastInitialValues();
+	virtual void BindCallbacksToDependencies();
 
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FAttributeInfoSignature AttributeInfoDelegate;
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAttributeInfo> AttributeInfo;
+
+private:
+	void BroadcastAttributeInfo(const FGameplayTag& AttributeTag, const FGameplayAttribute& Attribute) const;
 };
