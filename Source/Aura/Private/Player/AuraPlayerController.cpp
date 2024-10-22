@@ -101,14 +101,12 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 		return;
 	}
 
-	if (bTargeting) // But What if we are targeting something? Ability here
+	if (GetASC())// inform the ASC that we released our mouse anyway. 
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-		}
+		GetASC()->AbilityInputTagReleased(InputTag);
 	}
-	else // we want to check the press time : short or not?
+
+	if (!bTargeting && !bShiftKeyDown) // then short press -> moving
 	{
 		APawn* ControlledPawn = GetPawn();
 
@@ -122,10 +120,10 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				{
 					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
 				}
+				CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
 				bAutoRunning = true;
 			}
 		}
-
 		FollowTime = 0.f;
 		bTargeting = false;
 	}
@@ -142,7 +140,7 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		return;
 	}
 
-	if (bTargeting) // But What if we are targeting something? Ability here
+	if (bTargeting || bShiftKeyDown) // But What if we are targeting something? Ability here
 	{
 		if (GetASC())
 		{
@@ -210,6 +208,8 @@ void AAuraPlayerController::SetupInputComponent()
 		CastChecked<UAuraInputComponent>(InputComponent);
 
 	AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &AAuraPlayerController::ShiftPressed);
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AAuraPlayerController::ShiftReleased);
 
 	AuraInputComponent->BindAbilityActions(InputConfig, this,
 		&AAuraPlayerController::AbilityInputTagPressed,
